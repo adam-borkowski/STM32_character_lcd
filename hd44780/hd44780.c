@@ -147,13 +147,13 @@ int8_t char_lcd_init(void)
 		set_enable_pin(1);
 		char_lcd_4b_write(0x03);
 		set_enable_pin(0);
-		HAL_Delay(1000); //FIXME: Should wait more than 4.1ms
+		HAL_Delay(4); //FIXME: Should wait more than 4.1ms
 	}
 
 	set_enable_pin(1);
 	char_lcd_4b_write(0x02);
 	set_enable_pin(0);
-	HAL_Delay(200); // FIXME: Should wait for 1ms
+	HAL_Delay(1); // FIXME: Should wait for 1ms
 
 	/* Function Set */
 	char_lcd_write(0x28, CHAR_LCD_INSTRUCTION_REGISTER);
