@@ -8,10 +8,16 @@
 #include "hd44780.h"
 #include "hd44780_hal.h"
 
+
 #define CHAR_LCD_INSTRUCTION_REGISTER 0
 #define CHAR_LCD_DATA_REGISTER 1
 #define CHAR_LCD_READ 1
 #define CHAR_LCD_WRITE 0
+
+#define FIRST_ROW_ADDRESS  0x80
+#define SECOND_ROW_ADDRESS 0xC0
+#define THIRD_ROW_ADDRESS  0x94
+#define FOURTH_ROW_ADDRESS 0xD4
 
 /* RS */
 static int8_t char_lcd_registers_select(uint8_t data_command_switch);
@@ -120,10 +126,12 @@ static int8_t char_lcd_write(uint8_t data, uint8_t data_command_switch)
 	char_lcd_4b_write(data>>4);
 	set_enable_pin(0);
 	set_enable_pin(1);
-	char_lcd_4b_write(data);
+	char_lcd_4b_write(data & 0x0F);
 	set_enable_pin(0);
+//	HAL_Delay(1);
 	do{
 		busy = char_lcd_read_busy_flag();
+//		HAL_Delay(1);
 	}while(busy == 1);
 
 	return 0;
@@ -141,19 +149,20 @@ static int8_t char_lcd_read_busy_flag(void)
 
 int8_t char_lcd_init(void)
 {
+	HAL_Delay(15);
 	/* Write 0x03 instruction 3 times then 0x02 to switch to 4-bit mode */
 	for(uint8_t i = 0; i<3; i++)
 	{
 		set_enable_pin(1);
 		char_lcd_4b_write(0x03);
 		set_enable_pin(0);
-		HAL_Delay(4); //FIXME: Should wait more than 4.1ms
+		HAL_Delay(5); //FIXME: Should wait more than 4.1ms
 	}
 
 	set_enable_pin(1);
 	char_lcd_4b_write(0x02);
 	set_enable_pin(0);
-	HAL_Delay(1); // FIXME: Should wait for 1ms
+	HAL_Delay(2); // FIXME: Should wait for 1ms
 
 	/* Function Set */
 	char_lcd_write(0x28, CHAR_LCD_INSTRUCTION_REGISTER);
@@ -179,11 +188,19 @@ int8_t char_lcd_write_string(uint8_t * string, uint8_t row, uint8_t column)
 
 	if (row == 1)
 	{
-		char_lcd_write(0x80 + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the first line
+		char_lcd_write(FIRST_ROW_ADDRESS + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the first line
 	}
 	else if (row == 2)
 	{
-		char_lcd_write(0xC0 + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the second line
+		char_lcd_write(SECOND_ROW_ADDRESS + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the second line
+	}
+	else if (row == 3)
+	{
+		char_lcd_write(THIRD_ROW_ADDRESS + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the second line
+	}
+	else if (row == 4)
+	{
+		char_lcd_write(FOURTH_ROW_ADDRESS + column, CHAR_LCD_INSTRUCTION_REGISTER); //Set cursor at the second line
 	}
 
 	for (i = 0; i<strlen(string); i++)
